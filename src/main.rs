@@ -1,5 +1,6 @@
 mod one; 
 mod two;
+mod three;
 
 fn main() {
     println!("Problem 1a: {}", one::part_a());
