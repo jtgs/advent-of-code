@@ -1,6 +1,7 @@
 mod one; 
 mod two;
 mod three;
+mod four;
 
 fn main() {
     println!("Problem 1a: {}", one::part_a());
@@ -11,4 +12,7 @@ fn main() {
 
     println!("Problem 3a: {}", three::part_a());
     println!("Problem 3b: {}", three::part_b());
+
+    println!("Problem 4a: {}", four::part_a());
+    println!("Problem 4b: {}", four::part_b());
 }
