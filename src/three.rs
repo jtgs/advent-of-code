@@ -216,9 +216,6 @@ fn get_points(line_a: &Vec<Instruction>, line_b: &Vec<Instruction>) -> (HashSet<
 }
 
 fn get_intersections(points_a: HashSet<Point>, points_b: HashSet<Point>) -> Vec<Point> {
-    let intersections = points_a.intersection(&points_b).collect::<Vec<&Point>>();
-    // println!("intersections: {:?}", intersections);
-
     let intersections = points_a.intersection(&points_b).map(Point::clone).collect::<Vec<Point>>();
     // println!("intersections: {:?}", intersections);
 
