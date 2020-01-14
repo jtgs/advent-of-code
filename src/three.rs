@@ -63,14 +63,111 @@ pub fn part_a() -> i32 {
         .map(Result::unwrap)
         .collect();
 
-    solve(lines)
+    solve_a(lines)
 }
 
-pub fn solve(lines: Vec<String>) -> i32 {
+pub fn solve_a(lines: Vec<String>) -> i32 {
+    let (line_a, line_b) = get_instructions(lines);
+    let (points_a, points_b) = get_points(&line_a, &line_b);
+    let intersections = get_intersections(points_a, points_b);
+
+    let distances: Vec<i32> = intersections.iter().map(Point::distance).collect();
+
+    println!("distances: {:?}", distances);
+
+    *distances.iter().min().unwrap()
+}
+
+pub fn part_b() -> i32 {
+    let lines: Vec<_> = BufReader::new(File::open("input3.txt").expect("Unable to open file"))
+        .lines()
+        .map(Result::unwrap)
+        .collect();
+    
+    solve_b(lines)
+}
+
+fn solve_b(lines: Vec<String>) -> i32 {
+    let (line_a, line_b) = get_instructions(lines);
+    let (points_a, points_b) = get_points(&line_a, &line_b);
+
+    let mut steps: Vec<i32> = Vec::new();
+
+    for is in get_intersections(points_a, points_b) {
+        println!("{:?}", is);
+
+        let mut steps_a = 0;
+        let mut curr_point = Point(0, 0);
+        let mut done = false;
+
+        for instruction in &line_a {
+
+            let step = match instruction.direction {
+                Direction::Right => Point(1, 0),
+                Direction::Left => Point(-1, 0),
+                Direction::Up => Point(0, 1),
+                Direction::Down => Point(0, -1)
+            };
+    
+            for _ in 0..instruction.distance {
+                curr_point += step;
+                steps_a += 1;
+                if curr_point == is {
+                    done = true;
+                    break;
+                }
+            }
+
+            if done {
+                break;
+            }
+    
+        };
+
+        let mut steps_b = 0;
+        let mut curr_point = Point(0, 0);
+        let mut done = false;
+
+        for instruction in &line_b {
+
+            let step = match instruction.direction {
+                Direction::Right => Point(1, 0),
+                Direction::Left => Point(-1, 0),
+                Direction::Up => Point(0, 1),
+                Direction::Down => Point(0, -1)
+            };
+    
+            for _ in 0..instruction.distance {
+                curr_point += step;
+                steps_b += 1;
+                if curr_point == is {
+                    done = true;
+                    break;
+                }
+            }
+
+            if done {
+                break;
+            }
+    
+        };
+
+        steps.push(steps_a + steps_b); 
+    }
+
+    *steps.iter().min().unwrap()
+}
+
+fn get_instructions(lines: Vec<String>) -> (Vec<Instruction>, Vec<Instruction>) {
     let line_a: Vec<Instruction> = lines[0].split(',').map(Instruction::from_str).map(Result::unwrap).collect();
-    println!("{:?}", line_a);
+    // println!("{:?}", line_a);
     let line_b: Vec<Instruction> = lines[1].split(',').map(Instruction::from_str).map(Result::unwrap).collect();
-    println!("{:?}", line_b);
+    // println!("{:?}", line_b);
+
+    (line_a, line_b)
+}
+
+fn get_points(line_a: &Vec<Instruction>, line_b: &Vec<Instruction>) -> (HashSet<Point>, HashSet<Point>) {
 
     let mut points_a: HashSet<Point> = HashSet::new();
     let mut points_b: HashSet<Point> = HashSet::new();
@@ -93,7 +190,7 @@ pub fn solve(lines: Vec<String>) -> i32 {
 
     };
 
-    println!("points_a: {:?}", points_a);
+    // println!("points_a: {:?}", points_a);
 
     let mut curr_point = Point(0, 0);
 
@@ -113,19 +210,19 @@ pub fn solve(lines: Vec<String>) -> i32 {
 
     };
 
-    println!("points_b: {:?}", points_b);
+    // println!("points_b: {:?}", points_b);
 
+    (points_a, points_b)
+}
+
+fn get_intersections(points_a: HashSet<Point>, points_b: HashSet<Point>) -> Vec<Point> {
     let intersections = points_a.intersection(&points_b).collect::<Vec<&Point>>();
-    println!("intersections: {:?}", intersections);
+    // println!("intersections: {:?}", intersections);
 
     let intersections = points_a.intersection(&points_b).map(Point::clone).collect::<Vec<Point>>();
-    println!("intersections: {:?}", intersections);
+    // println!("intersections: {:?}", intersections);
 
-    let distances: Vec<i32> = intersections.iter().map(Point::distance).collect();
-
-    println!("distances: {:?}", distances);
-
-    *distances.iter().min().unwrap()
+    intersections
 }
 
 #[cfg(test)]
@@ -175,7 +272,7 @@ mod tests {
     #[test]
     fn simple_example() {
         assert_eq!(
-            solve(vec!["U3,R3".to_string(), "R3,U3".to_string()]),
+            solve_a(vec!["U3,R3".to_string(), "R3,U3".to_string()]),
             6
         )
     }
@@ -183,7 +280,7 @@ mod tests {
     #[test]
     fn example_one() {
         assert_eq!(
-            solve(vec!["R75,D30,R83,U83,L12,D49,R71,U7,L72".to_string(), "U62,R66,U55,R34,D71,R55,D58,R83".to_string()]),
+            solve_a(vec!["R75,D30,R83,U83,L12,D49,R71,U7,L72".to_string(), "U62,R66,U55,R34,D71,R55,D58,R83".to_string()]),
             159
         );
     }
@@ -191,8 +288,16 @@ mod tests {
     #[test]
     fn example_two() {
         assert_eq!(
-            solve(vec!["R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51".to_string(), "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7".to_string()]),
+            solve_a(vec!["R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51".to_string(), "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7".to_string()]),
             135
         );
+    }
+
+    #[test]
+    fn simple_example_b() {
+        assert_eq!(
+            solve_b(vec!["R8,U5,L5,D3".to_string(), "U7,R6,D4,L4".to_string()]),
+            30
+        )
     }
 }
