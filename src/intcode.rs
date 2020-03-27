@@ -38,26 +38,31 @@ impl Intcode {
                 return;
             }
     
-            let a = program[prog_counter + 1] as usize;
-            let b = program[prog_counter + 2] as usize;
-            let c = program[prog_counter + 3] as usize;
-            // println!("{} ({}, {}, {})", opcode, a, b, c);
-    
             match opcode {
                 1 => {
+                    let a = program[prog_counter + 1] as usize;
+                    let b = program[prog_counter + 2] as usize;
+                    let c = program[prog_counter + 3] as usize;
                     program[c] = program[a] + program[b];
                     prog_counter += 4;
                 },
                 2 => {
+                    let a = program[prog_counter + 1] as usize;
+                    let b = program[prog_counter + 2] as usize;
+                    let c = program[prog_counter + 3] as usize;
                     program[c] = program[a] * program[b];
                     prog_counter += 4;
                 },
                 3 => {
+                    let a = program[prog_counter + 1] as usize;
                     let input = self.input.remove(0);
                     program[a] = input;
+                    prog_counter += 2;
                 },
                 4 => {
+                    let a = program[prog_counter + 1] as usize;
                     self.output.push(program[a]);
+                    prog_counter += 2;
                 }
                 _ => panic!("unimplemented opcode!")
             }

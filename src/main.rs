@@ -1,7 +1,8 @@
-// mod one; 
+mod one; 
 mod two;
-// mod three;
-// mod four;
+mod three;
+mod four;
+mod five;
 mod intcode;
 
 fn main() {
@@ -16,4 +17,7 @@ fn main() {
 
     // println!("Problem 4a: {}", four::part_a());
     // println!("Problem 4b: {}", four::part_b());
+
+    // println!("Problem 5a: {}", five::part_a());
+    // println!("Problem 5b: {}", five::part_b());
 }
