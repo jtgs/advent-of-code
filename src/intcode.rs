@@ -1,9 +1,133 @@
 #[derive(Debug, Clone)]
+enum Opcode {
+    Add,          // 1
+    Multiply,     // 2
+    StoreInput,   // 3
+    PushOutput,   // 4
+    Halt          // 99
+}
+
+#[derive(Debug)]
+enum ParamMode {
+    Position,     // 0
+    Immediate,    // 1
+    Reference     // because I got confused!
+}
+
+#[derive(PartialEq, Debug)]
+enum StepResult {
+    Halt,
+    Continue
+}
+
+#[derive(Debug)]
+struct Operation {
+    pub opcode: Opcode,
+    pub num_params: i32,
+    pub param_modes: Vec<ParamMode>
+}
+
+/// Parses an integer representing an opcode into an Opcode and vector of 
+/// ParamModes. 
+fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
+    debug!("input: {}", input);
+
+    let opcode = match input % 100 {
+        1  => Opcode::Add,
+        2  => Opcode::Multiply,
+        3  => Opcode::StoreInput,
+        4  => Opcode::PushOutput,
+        99 => Opcode::Halt,
+        _  => panic!("Unsupported opcode!")
+    };
+    debug!("opcode: {:?}", opcode);
+
+    // Assume for now we're only going to get two parameters that might be 
+    // immediate. (See the match below for why.)
+    let param1 = match (input / 100) % 10 == 1 {
+        true => ParamMode::Immediate,
+        false => ParamMode::Position,
+    };
+    let param2 = match (input / 1000) % 10 == 1 {
+        true => ParamMode::Immediate,
+        false => ParamMode::Position,
+    };
+    debug!("param1: {:?}, param2: {:?}", param1, param2);
+
+    let param_modes = match opcode {
+        Opcode::Add | Opcode::Multiply => {
+            // Params 1 and 2 can be Position or Immediate.
+            // Param 3 provides the reference to write to.
+            vec!(param1, param2, ParamMode::Reference)
+        },
+        Opcode::StoreInput => {
+            // The single param here is the destination of the input. 
+            vec!(ParamMode::Reference)
+        },
+        Opcode::PushOutput => {
+            // This has a single parameter which could be immediate or position.
+            vec!(param1)
+        }
+        Opcode::Halt => {
+            // This has no parameters.
+            Vec::new()
+        }
+    };
+    debug!("param_modes: {:?}", param_modes);
+
+    (opcode, param_modes)
+}
+
+impl Operation {
+    /// Builds a new Operation from the provided program, starting at the point 
+    /// indicated by the program counter (pc).
+    pub fn from(program: &Vec<i32>, pc: i32) -> Self {
+        debug!("New Operation from position {}", pc);
+        let (opcode, param_modes) = parse_opcode(program[pc as usize]);
+
+        // Work out how many parameters we need.
+        let num_params = match opcode {
+            Opcode::Add | Opcode::Multiply => 3,
+            Opcode::StoreInput | Opcode::PushOutput => 1,
+            Opcode::Halt => 0,
+        };
+        debug!("  no. params: {}", num_params);
+
+        Self {opcode, num_params, param_modes}
+    }
+
+    /// Given a whole program, and the position of this Operation within it,
+    /// works out what the parameters are for this Operation.
+    pub fn get_params(&self, program: &Vec<i32>, pc: i32) -> Vec<i32> {
+        let mut params: Vec<i32> = Vec::new();
+
+        for ii in 0..self.num_params as usize {
+            match self.param_modes[ii] {
+                ParamMode::Position => {
+                    // This is the number at the position indicated.
+                    let index = program[pc as usize + ii + 1] as usize;
+                    params.push(program[index]);
+                },
+                ParamMode::Immediate | ParamMode::Reference => {
+                    // This is just the literal number in the parameter.
+                    params.push(program[pc as usize + ii + 1]);
+                }
+            }
+        }
+
+        debug!("got params: {:?}", params);
+
+        params
+    }
+}
+
 // Struct to store an intcode program.
+#[derive(Debug, Clone)]
 pub struct Intcode {
     pub program: Vec<i32>,
     pub input: Vec<i32>,
-    pub output: Vec<i32>
+    pub output: Vec<i32>,
+    pc: i32
 }
 
 impl Intcode {
@@ -15,7 +139,8 @@ impl Intcode {
                         .map(|s| s.parse().expect(&format!("Invalid entry: {}", s)))
                         .collect(),
             input: Vec::new(),
-            output: Vec::new()
+            output: Vec::new(),
+            pc: 0
         }
     }
 
@@ -24,49 +149,66 @@ impl Intcode {
 
         Self::from(&data)
     }
-
-    pub fn process(&mut self) {
+    
+    /// Perform a single operation, starting at the program counter (pc). 
+    /// 
+    /// Returns a StepResult (Halt or Continue). 
+    fn step(&mut self) -> StepResult {
         let program = &mut self.program;
 
-        let mut prog_counter = 0;
-    
-        loop {
-            // println!("prog_counter is {}", prog_counter);
-            let opcode = program[prog_counter];
-    
-            if opcode == 99 {
-                return;
+        // Calculate what the next operation is. 
+        let op = Operation::from(program, self.pc);
+
+        // Get the parameters. This deals with parameter modes so that the 
+        // value in this vector is the one we need below.
+        let params = op.get_params(program, self.pc);
+
+        let mut result = StepResult::Continue;
+
+        // Perform the operation.
+        match op.opcode {
+            Opcode::Add => {
+                // Add the first to the second, store in the third.
+                debug!("{} + {} -> [{}]", params[0], params[1], params[2]);
+                program[params[2] as usize] = params[0] + params[1];
+            },
+            Opcode::Multiply => {
+                // Multiply the first and the second, store in the third.
+                debug!("{} * {} -> [{}]", params[0], params[1], params[2]);
+                program[params[2] as usize] = params[0] * params[1];
+            },
+            Opcode::StoreInput => {
+                // Get the first value off the input stack; store it in the 
+                // cell indicated by the first parameter.
+                let input = self.input.remove(0);
+                debug!("{} -> [{}]", input, params[0]);
+                program[params[0] as usize] = input;
+            },
+            Opcode::PushOutput => {
+                // Push the first parameter to the output stack.
+                debug!("{} -> output", params[0]);
+                self.output.push(params[0]);
+            },
+            Opcode::Halt => {
+                debug!("Halt!");
+                result = StepResult::Halt;
             }
-    
-            match opcode {
-                1 => {
-                    let a = program[prog_counter + 1] as usize;
-                    let b = program[prog_counter + 2] as usize;
-                    let c = program[prog_counter + 3] as usize;
-                    program[c] = program[a] + program[b];
-                    prog_counter += 4;
-                },
-                2 => {
-                    let a = program[prog_counter + 1] as usize;
-                    let b = program[prog_counter + 2] as usize;
-                    let c = program[prog_counter + 3] as usize;
-                    program[c] = program[a] * program[b];
-                    prog_counter += 4;
-                },
-                3 => {
-                    let a = program[prog_counter + 1] as usize;
-                    let input = self.input.remove(0);
-                    program[a] = input;
-                    prog_counter += 2;
-                },
-                4 => {
-                    let a = program[prog_counter + 1] as usize;
-                    self.output.push(program[a]);
-                    prog_counter += 2;
-                }
-                _ => panic!("unimplemented opcode!")
-            }
-    
+        };
+
+        // Advance the program counter.
+        self.pc += op.num_params + 1;
+        debug!("PC is now {}", self.pc);
+
+        debug!("Returning {:?}", result);
+        result
+    }
+
+    /// Runs step-by-step until it encounters a Halt.
+    pub fn run(&mut self) {
+        let mut result = StepResult::Continue;
+
+        while result != StepResult::Halt {
+            result = self.step();
         }
     }
 }
