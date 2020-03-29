@@ -120,4 +120,16 @@ mod tests {
 
         assert_eq!(42, tree.walk_from_com());
     }
+
+    #[test]
+    fn six_example_two() {
+        init();
+
+        let tree = get_tree("test6b.txt");
+
+        let obj = find_last_common_point(tree.walk_to_point("YOU".to_string()), 
+                                         tree.walk_to_point("SAN".to_string()));
+
+        assert_eq!("D", obj);
+    }
 }
