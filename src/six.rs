@@ -113,6 +113,21 @@ pub fn part_a() -> i32 {
     tree.walk_from_com()
 }
 
+/// Finds the 'rightmost' common point between two tracks.
+fn find_last_common_point(first: Track, second: Track) -> Object {
+    let mut common: Vec<Object> = Vec::new();
+
+    for aa in &first {
+        for bb in &second {
+            if aa == bb {
+                common.push(aa.clone());
+            }
+        }
+    }
+
+    common.pop().unwrap()
+}
+
 fn get_tree(filename: &str) -> Tree {
     let orbits: Vec<Orbit> = BufReader::new(File::open(filename).expect("Unable to open file"))
     .lines()
@@ -158,15 +173,15 @@ mod tests {
         assert_eq!(vec!["COM", "B", "C", "D", "E", "J", "K", "YOU"], track);
     }
 
-    // #[test]
-    // fn six_example_two() {
-    //     init();
+    #[test]
+    fn six_example_two_proper() {
+        init();
 
-    //     let tree = get_tree("test6b.txt");
+        let tree = get_tree("test6b.txt");
 
-    //     let obj = find_last_common_point(tree.walk_to_point("YOU".to_string()), 
-    //                                      tree.walk_to_point("SAN".to_string()));
+        let obj = find_last_common_point(tree.walk_to_point("YOU".to_string()), 
+                                         tree.walk_to_point("SAN".to_string()));
 
-    //     assert_eq!("D", obj);
-    // }
+        assert_eq!("D", obj);
+    }
 }
