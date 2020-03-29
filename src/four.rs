@@ -31,6 +31,8 @@ fn solve(start: i32, finish: i32, mode: Mode) -> i32 {
                 increasing = false;
                 break;
             } else if last_digit == num {
+                // If we're here this is already the second time we've 
+                // seen this digit, so start the count at 1+1=2
                 let count = digits_seen.entry(num).or_insert(1);
                 *count += 1;
             }
