@@ -3,7 +3,7 @@ extern crate log;
 extern crate env_logger;
 
 // mod one; 
-mod two;
+// mod two;
 // mod three;
 // mod four;
 mod five;
@@ -17,10 +17,10 @@ fn main() {
     // println!("Problem 1b: {}", one::part_b());
     // debug!("End problem 1");
 
-    debug!("Start problem 2");
-    println!("Problem 2a: {}", two::part_a());
-    println!("Problem 2b: {}", two::part_b());
-    debug!("End problem 2");
+    // debug!("Start problem 2");
+    // println!("Problem 2a: {}", two::part_a());
+    // println!("Problem 2b: {}", two::part_b());
+    // debug!("End problem 2");
 
     // debug!("Start problem 3");
     // println!("Problem 3a: {}", three::part_a());
@@ -32,8 +32,8 @@ fn main() {
     // println!("Problem 4b: {}", four::part_b());
     // debug!("End problem 4");
 
-    // debug!("Start problem 5");
-    // println!("Problem 5a: {}", five::part_a());
+    debug!("Start problem 5");
+    println!("Problem 5a: {}", five::part_a());
     // println!("Problem 5b: {}", five::part_b());
-    // debug!("End problem 5");
+    debug!("End problem 5");
 }

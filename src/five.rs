@@ -8,7 +8,9 @@ pub fn part_a() -> i32 {
 
     program.run();
 
-    0
+    info!("Output: {:?}", program.output);
+
+    *program.output.last().unwrap()
 }
 
 #[cfg(test)]
