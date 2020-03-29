@@ -34,6 +34,6 @@ fn main() {
 
     debug!("Start problem 5");
     println!("Problem 5a: {}", five::part_a());
-    // println!("Problem 5b: {}", five::part_b());
+    println!("Problem 5b: {}", five::part_b());
     debug!("End problem 5");
 }

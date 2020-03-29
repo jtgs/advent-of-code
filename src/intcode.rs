@@ -1,9 +1,11 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum Opcode {
     Add,          // 1
     Multiply,     // 2
     StoreInput,   // 3
     PushOutput,   // 4
+    JumpIfTrue,   // 5
+    JumpIfFalse,  // 6
     Halt          // 99
 }
 
@@ -11,7 +13,7 @@ enum Opcode {
 enum ParamMode {
     Position,     // 0
     Immediate,    // 1
-    Reference     // because I got confused!
+    Reference,    // TODO: understand how this is position
 }
 
 #[derive(PartialEq, Debug)]
@@ -37,6 +39,8 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
         2  => Opcode::Multiply,
         3  => Opcode::StoreInput,
         4  => Opcode::PushOutput,
+        5  => Opcode::JumpIfTrue,
+        6  => Opcode::JumpIfFalse,
         99 => Opcode::Halt,
         _  => panic!("Unsupported opcode!")
     };
@@ -67,7 +71,12 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
         Opcode::PushOutput => {
             // This has a single parameter which could be immediate or position.
             vec!(param1)
-        }
+        },
+        Opcode::JumpIfTrue | Opcode::JumpIfFalse => {
+            // First parameter can be Position or Immediate;
+            // second parameter is a reference
+            vec!(param1, ParamMode::Reference)
+        },
         Opcode::Halt => {
             // This has no parameters.
             Vec::new()
@@ -88,6 +97,7 @@ impl Operation {
         // Work out how many parameters we need.
         let num_params = match opcode {
             Opcode::Add | Opcode::Multiply => 3,
+            Opcode::JumpIfTrue | Opcode::JumpIfFalse => 2,
             Opcode::StoreInput | Opcode::PushOutput => 1,
             Opcode::Halt => 0,
         };
@@ -164,6 +174,7 @@ impl Intcode {
         let params = op.get_params(program, self.pc);
 
         let mut result = StepResult::Continue;
+        let mut pc_moved = false;
 
         // Perform the operation.
         match op.opcode {
@@ -189,14 +200,37 @@ impl Intcode {
                 debug!("{} -> output", params[0]);
                 self.output.push(params[0]);
             },
+            Opcode::JumpIfTrue | Opcode::JumpIfFalse => {
+                // If the condition is met by the first param, move the 
+                // instruction pointer to the second param.
+                debug!("{:?} : {}?", op.opcode, params[0]);
+
+                let condition: bool;
+
+                // TODO: would be nice to do this without an if statement
+                if op.opcode == Opcode::JumpIfTrue {
+                    condition = params[0] != 0;
+                } else {  // JumpIfFalse
+                    condition = params[0] == 0;
+                }
+
+                if condition {
+                    debug!("Set PC to {}", params[1]);
+                    self.pc = params[1];
+                    pc_moved = true;
+                }
+            }, 
             Opcode::Halt => {
                 debug!("Halt!");
                 result = StepResult::Halt;
             }
         };
 
-        // Advance the program counter.
-        self.pc += op.num_params + 1;
+        // Advance the program counter, if it hasn't already changed.
+        if !pc_moved {
+            debug!("Advancing PC");
+            self.pc += op.num_params + 1;
+        }
         debug!("PC is now {}", self.pc);
 
         debug!("Returning {:?}", result);
@@ -210,5 +244,55 @@ impl Intcode {
         while result != StepResult::Halt {
             result = self.step();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn init() {
+        let _ = env_logger::builder().is_test(true).try_init();
+    }
+
+    #[test]
+    fn simple_test_of_io_opcodes() {
+        init();
+        let mut program = Intcode::from("3,0,4,0,99");
+        program.input.push(256);
+        program.run();
+        assert_eq!(vec![256], program.output);
+    }
+
+    #[test]
+    fn test_jump_if_true_1() {
+        init();
+        let mut program = Intcode::from("1105,2,77,99");
+        program.step();
+        assert_eq!(77, program.pc);
+    }
+
+    #[test]
+    fn test_jump_if_true_2() {
+        init();
+        let mut program = Intcode::from("1105,0,77,99");
+        program.step();
+        assert_eq!(3, program.pc);
+    }
+
+    #[test]
+    fn test_jump_if_false_1() {
+        init();
+        let mut program = Intcode::from("1106,0,77,99");
+        program.step();
+        assert_eq!(77, program.pc);
+    }
+
+    #[test]
+    fn test_jump_if_false_2() {
+        init();
+        let mut program = Intcode::from("1106,2,77,99");
+        program.step();
+        assert_eq!(3, program.pc);
     }
 }
