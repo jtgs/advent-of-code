@@ -4,6 +4,7 @@ use std::io::BufReader;
 use std::collections::HashMap;
 
 type Object = String;
+type Track = Vec<Object>;
 
 #[derive(Debug)]
 struct Orbit {
@@ -53,12 +54,26 @@ impl Tree {
 
     fn walk_from_com(&self) -> i32 {
         let com = self.nodes.get("COM").unwrap();
+        let mut _track = Track::new();
         
-        self.walk(com.this.clone(), 0)
+        self.walk(com.this.clone(), 0, &mut _track, None)
     }
 
-    fn walk(&self, obj: Object, depth: i32) -> i32 {
+    fn walk_to_point(&self, point: Object) -> Track {
+        let com = self.nodes.get("COM").unwrap();
+        let mut track = Track::new();
+
+        self.walk(com.this.clone(), 0, &mut track, Some(point));
+
+        track
+    }
+
+    fn walk(&self, obj: Object, depth: i32, track: &mut Track, target: Option<Object>) -> i32 {
         debug!("Walk from {}, depth {}", obj, depth);
+
+        // Add this node to the track.
+        track.push(obj.clone());
+
         // Find the object referenced.
         if let Some(the_obj) = self.nodes.get(&obj) {
             let mut count = depth;
@@ -67,7 +82,18 @@ impl Tree {
             // Call walk on each of its children.
             for child in the_obj.children.clone() {
                 debug!(" -> child of {}", obj);
-                count += self.walk(child, depth);
+                count += self.walk(child, depth, track, target.clone());
+
+                // If the target is on the track, stop here.
+                if let Some(tgt) = &target {
+                    if track.contains(&tgt) {
+                        break;
+                    }
+                }
+
+                // Alternatively, if we didn't find the target on this branch,
+                // remove the last item (i.e. this child) from the track.
+                track.pop();
             }
             
             debug!("{} contributes {}", obj, count);
@@ -122,14 +148,25 @@ mod tests {
     }
 
     #[test]
-    fn six_example_two() {
+    fn six_example_two_simple() {
         init();
 
         let tree = get_tree("test6b.txt");
 
-        let obj = find_last_common_point(tree.walk_to_point("YOU".to_string()), 
-                                         tree.walk_to_point("SAN".to_string()));
+        let track = tree.walk_to_point("YOU".to_string());
 
-        assert_eq!("D", obj);
+        assert_eq!(vec!["COM", "B", "C", "D", "E", "J", "K", "YOU"], track);
     }
+
+    // #[test]
+    // fn six_example_two() {
+    //     init();
+
+    //     let tree = get_tree("test6b.txt");
+
+    //     let obj = find_last_common_point(tree.walk_to_point("YOU".to_string()), 
+    //                                      tree.walk_to_point("SAN".to_string()));
+
+    //     assert_eq!("D", obj);
+    // }
 }
