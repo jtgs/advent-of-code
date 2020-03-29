@@ -6,6 +6,8 @@ enum Opcode {
     PushOutput,   // 4
     JumpIfTrue,   // 5
     JumpIfFalse,  // 6
+    LessThan,     // 7
+    Equals,       // 8
     Halt          // 99
 }
 
@@ -41,8 +43,10 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
         4  => Opcode::PushOutput,
         5  => Opcode::JumpIfTrue,
         6  => Opcode::JumpIfFalse,
+        7  => Opcode::LessThan,
+        8  => Opcode::Equals,
         99 => Opcode::Halt,
-        _  => panic!("Unsupported opcode!")
+        _  => panic!("Unsupported opcode {}!", input)
     };
     debug!("opcode: {:?}", opcode);
 
@@ -59,7 +63,7 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
     debug!("param1: {:?}, param2: {:?}", param1, param2);
 
     let param_modes = match opcode {
-        Opcode::Add | Opcode::Multiply => {
+        Opcode::Add | Opcode::Multiply | Opcode::LessThan | Opcode::Equals => {
             // Params 1 and 2 can be Position or Immediate.
             // Param 3 provides the reference to write to.
             vec!(param1, param2, ParamMode::Reference)
@@ -73,9 +77,8 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
             vec!(param1)
         },
         Opcode::JumpIfTrue | Opcode::JumpIfFalse => {
-            // First parameter can be Position or Immediate;
-            // second parameter is a reference
-            vec!(param1, ParamMode::Reference)
+            // Both parameters can be Position or Immediate
+            vec!(param1, param2)
         },
         Opcode::Halt => {
             // This has no parameters.
@@ -96,7 +99,7 @@ impl Operation {
 
         // Work out how many parameters we need.
         let num_params = match opcode {
-            Opcode::Add | Opcode::Multiply => 3,
+            Opcode::Add | Opcode::Multiply | Opcode::LessThan | Opcode::Equals => 3,
             Opcode::JumpIfTrue | Opcode::JumpIfFalse => 2,
             Opcode::StoreInput | Opcode::PushOutput => 1,
             Opcode::Halt => 0,
@@ -218,6 +221,28 @@ impl Intcode {
                     debug!("Set PC to {}", params[1]);
                     self.pc = params[1];
                     pc_moved = true;
+                }
+            }, 
+            Opcode::LessThan | Opcode::Equals => {
+                // If the first param is less than / equal to the second,
+                // store '1' in the position given by the third param. 
+                // Otherwise, store '0'.
+                debug!("{:?} : {} ? {}", op.opcode, params[0], params[1]);
+
+                let condition: bool;
+
+                if op.opcode == Opcode::LessThan {
+                    condition = params[0] < params[1];
+                } else {  // Equals
+                    condition = params[0] == params[1];
+                }
+
+                if condition {
+                    debug!("Store 1 in slot {}", params[2]);
+                    program[params[2] as usize] = 1;
+                } else {
+                    debug!("Store 0 in slot {}", params[2]);
+                    program[params[2] as usize] = 0;
                 }
             }, 
             Opcode::Halt => {
