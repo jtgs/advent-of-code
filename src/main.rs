@@ -40,6 +40,6 @@ fn main() {
 
     debug!("Start problem 6");
     println!("Problem 6a: {}", six::part_a());
-    // println!("Problem 6b: {}", six::part_b());
+    println!("Problem 6b: {}", six::part_b());
     debug!("End problem 6");
 }

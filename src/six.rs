@@ -113,19 +113,41 @@ pub fn part_a() -> i32 {
     tree.walk_from_com()
 }
 
-/// Finds the 'rightmost' common point between two tracks.
-fn find_last_common_point(first: Track, second: Track) -> Object {
-    let mut common: Vec<Object> = Vec::new();
+pub fn part_b() -> i32 {
+    let tree = get_tree("input6.txt");
 
-    for aa in &first {
-        for bb in &second {
+    let track_a = tree.walk_to_point("YOU".to_string());
+    let track_b = tree.walk_to_point("SAN".to_string());
+
+    let (_, ixa, ixb) = find_last_common_point(track_a, track_b).unwrap();
+
+    ixa + ixb
+}
+
+/// Finds the 'rightmost' common point between two tracks.
+/// 
+/// Returns that point, plus the number of hops required to get to it from
+/// each of the tracks' endpoints.
+fn find_last_common_point(first: Track, second: Track) -> Option<(Object, i32, i32)> {
+    // Reverse the two Tracks so that the last (common point) shall be the 
+    // first (common point). 
+    let mut first = first.clone();
+    first.reverse();
+    debug!("First: {:?}", first);
+    let mut second = second.clone();
+    second.reverse();
+    debug!("First: {:?}", second);
+
+    for (ixa, aa) in first.iter().enumerate() {
+        for (ixb, bb) in second.iter().enumerate() {
             if aa == bb {
-                common.push(aa.clone());
+                debug!("Match! {}, {}, {}", aa, ixa, ixb);
+                return Some((aa.clone(), ixa as i32 - 1, ixb as i32 - 1));
             }
         }
     }
 
-    common.pop().unwrap()
+    None
 }
 
 fn get_tree(filename: &str) -> Tree {
@@ -179,9 +201,11 @@ mod tests {
 
         let tree = get_tree("test6b.txt");
 
-        let obj = find_last_common_point(tree.walk_to_point("YOU".to_string()), 
-                                         tree.walk_to_point("SAN".to_string()));
+        let track_a = tree.walk_to_point("YOU".to_string());
+        let track_b = tree.walk_to_point("SAN".to_string());
 
+        let (obj, ixa, ixb) = find_last_common_point(track_a, track_b).unwrap();
         assert_eq!("D", obj);
+        assert_eq!(4, ixa + ixb);        
     }
 }
