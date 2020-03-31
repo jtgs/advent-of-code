@@ -1,56 +1,56 @@
 #[derive(Debug, Clone, PartialEq)]
 enum Opcode {
-    Add,          // 1
-    Multiply,     // 2
-    StoreInput,   // 3
-    PushOutput,   // 4
-    JumpIfTrue,   // 5
-    JumpIfFalse,  // 6
-    LessThan,     // 7
-    Equals,       // 8
-    Halt          // 99
+    Add,         // 1
+    Multiply,    // 2
+    StoreInput,  // 3
+    PushOutput,  // 4
+    JumpIfTrue,  // 5
+    JumpIfFalse, // 6
+    LessThan,    // 7
+    Equals,      // 8
+    Halt,        // 99
 }
 
 #[derive(Debug)]
 enum ParamMode {
-    Position,     // 0
-    Immediate,    // 1
-    Reference,    // TODO: understand how this is position
+    Position,  // 0
+    Immediate, // 1
+    Reference, // TODO: understand how this is position
 }
 
 #[derive(PartialEq, Debug)]
 enum StepResult {
     Halt,
-    Continue
+    Continue,
 }
 
 #[derive(Debug)]
 struct Operation {
     pub opcode: Opcode,
     pub num_params: i32,
-    pub param_modes: Vec<ParamMode>
+    pub param_modes: Vec<ParamMode>,
 }
 
-/// Parses an integer representing an opcode into an Opcode and vector of 
-/// ParamModes. 
+/// Parses an integer representing an opcode into an Opcode and vector of
+/// ParamModes.
 fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
     debug!("input: {}", input);
 
     let opcode = match input % 100 {
-        1  => Opcode::Add,
-        2  => Opcode::Multiply,
-        3  => Opcode::StoreInput,
-        4  => Opcode::PushOutput,
-        5  => Opcode::JumpIfTrue,
-        6  => Opcode::JumpIfFalse,
-        7  => Opcode::LessThan,
-        8  => Opcode::Equals,
+        1 => Opcode::Add,
+        2 => Opcode::Multiply,
+        3 => Opcode::StoreInput,
+        4 => Opcode::PushOutput,
+        5 => Opcode::JumpIfTrue,
+        6 => Opcode::JumpIfFalse,
+        7 => Opcode::LessThan,
+        8 => Opcode::Equals,
         99 => Opcode::Halt,
-        _  => panic!("Unsupported opcode {}!", input)
+        _ => panic!("Unsupported opcode {}!", input),
     };
     debug!("opcode: {:?}", opcode);
 
-    // Assume for now we're only going to get two parameters that might be 
+    // Assume for now we're only going to get two parameters that might be
     // immediate. (See the match below for why.)
     let param1 = match (input / 100) % 10 == 1 {
         true => ParamMode::Immediate,
@@ -66,20 +66,20 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
         Opcode::Add | Opcode::Multiply | Opcode::LessThan | Opcode::Equals => {
             // Params 1 and 2 can be Position or Immediate.
             // Param 3 provides the reference to write to.
-            vec!(param1, param2, ParamMode::Reference)
-        },
+            vec![param1, param2, ParamMode::Reference]
+        }
         Opcode::StoreInput => {
-            // The single param here is the destination of the input. 
-            vec!(ParamMode::Reference)
-        },
+            // The single param here is the destination of the input.
+            vec![ParamMode::Reference]
+        }
         Opcode::PushOutput => {
             // This has a single parameter which could be immediate or position.
-            vec!(param1)
-        },
+            vec![param1]
+        }
         Opcode::JumpIfTrue | Opcode::JumpIfFalse => {
             // Both parameters can be Position or Immediate
-            vec!(param1, param2)
-        },
+            vec![param1, param2]
+        }
         Opcode::Halt => {
             // This has no parameters.
             Vec::new()
@@ -91,7 +91,7 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
 }
 
 impl Operation {
-    /// Builds a new Operation from the provided program, starting at the point 
+    /// Builds a new Operation from the provided program, starting at the point
     /// indicated by the program counter (pc).
     pub fn from(program: &Vec<i32>, pc: i32) -> Self {
         debug!("New Operation from position {}", pc);
@@ -106,7 +106,11 @@ impl Operation {
         };
         debug!("  no. params: {}", num_params);
 
-        Self {opcode, num_params, param_modes}
+        Self {
+            opcode,
+            num_params,
+            param_modes,
+        }
     }
 
     /// Given a whole program, and the position of this Operation within it,
@@ -120,7 +124,7 @@ impl Operation {
                     // This is the number at the position indicated.
                     let index = program[pc as usize + ii + 1] as usize;
                     params.push(program[index]);
-                },
+                }
                 ParamMode::Immediate | ParamMode::Reference => {
                     // This is just the literal number in the parameter.
                     params.push(program[pc as usize + ii + 1]);
@@ -140,20 +144,20 @@ pub struct Intcode {
     pub program: Vec<i32>,
     pub input: Vec<i32>,
     pub output: Vec<i32>,
-    pc: i32
+    pc: i32,
 }
 
 impl Intcode {
     pub fn from(input: &str) -> Self {
         Self {
             program: input
-                        .trim()
-                        .split(',')
-                        .map(|s| s.parse().expect(&format!("Invalid entry: {}", s)))
-                        .collect(),
+                .trim()
+                .split(',')
+                .map(|s| s.parse().expect(&format!("Invalid entry: {}", s)))
+                .collect(),
             input: Vec::new(),
             output: Vec::new(),
-            pc: 0
+            pc: 0,
         }
     }
 
@@ -162,17 +166,17 @@ impl Intcode {
 
         Self::from(&data)
     }
-    
-    /// Perform a single operation, starting at the program counter (pc). 
-    /// 
-    /// Returns a StepResult (Halt or Continue). 
+
+    /// Perform a single operation, starting at the program counter (pc).
+    ///
+    /// Returns a StepResult (Halt or Continue).
     fn step(&mut self) -> StepResult {
         let program = &mut self.program;
 
-        // Calculate what the next operation is. 
+        // Calculate what the next operation is.
         let op = Operation::from(program, self.pc);
 
-        // Get the parameters. This deals with parameter modes so that the 
+        // Get the parameters. This deals with parameter modes so that the
         // value in this vector is the one we need below.
         let params = op.get_params(program, self.pc);
 
@@ -185,26 +189,26 @@ impl Intcode {
                 // Add the first to the second, store in the third.
                 debug!("{} + {} -> [{}]", params[0], params[1], params[2]);
                 program[params[2] as usize] = params[0] + params[1];
-            },
+            }
             Opcode::Multiply => {
                 // Multiply the first and the second, store in the third.
                 debug!("{} * {} -> [{}]", params[0], params[1], params[2]);
                 program[params[2] as usize] = params[0] * params[1];
-            },
+            }
             Opcode::StoreInput => {
-                // Get the first value off the input stack; store it in the 
+                // Get the first value off the input stack; store it in the
                 // cell indicated by the first parameter.
                 let input = self.input.remove(0);
                 debug!("{} -> [{}]", input, params[0]);
                 program[params[0] as usize] = input;
-            },
+            }
             Opcode::PushOutput => {
                 // Push the first parameter to the output stack.
                 debug!("{} -> output", params[0]);
                 self.output.push(params[0]);
-            },
+            }
             Opcode::JumpIfTrue | Opcode::JumpIfFalse => {
-                // If the condition is met by the first param, move the 
+                // If the condition is met by the first param, move the
                 // instruction pointer to the second param.
                 debug!("{:?} : {}?", op.opcode, params[0]);
 
@@ -213,7 +217,8 @@ impl Intcode {
                 // TODO: would be nice to do this without an if statement
                 if op.opcode == Opcode::JumpIfTrue {
                     condition = params[0] != 0;
-                } else {  // JumpIfFalse
+                } else {
+                    // JumpIfFalse
                     condition = params[0] == 0;
                 }
 
@@ -222,10 +227,10 @@ impl Intcode {
                     self.pc = params[1];
                     pc_moved = true;
                 }
-            }, 
+            }
             Opcode::LessThan | Opcode::Equals => {
                 // If the first param is less than / equal to the second,
-                // store '1' in the position given by the third param. 
+                // store '1' in the position given by the third param.
                 // Otherwise, store '0'.
                 debug!("{:?} : {} ? {}", op.opcode, params[0], params[1]);
 
@@ -233,7 +238,8 @@ impl Intcode {
 
                 if op.opcode == Opcode::LessThan {
                     condition = params[0] < params[1];
-                } else {  // Equals
+                } else {
+                    // Equals
                     condition = params[0] == params[1];
                 }
 
@@ -244,7 +250,7 @@ impl Intcode {
                     debug!("Store 0 in slot {}", params[2]);
                     program[params[2] as usize] = 0;
                 }
-            }, 
+            }
             Opcode::Halt => {
                 debug!("Halt!");
                 result = StepResult::Halt;

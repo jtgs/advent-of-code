@@ -2,13 +2,13 @@
 extern crate log;
 extern crate env_logger;
 
-// mod one; 
+// mod intcode;
+// mod one;
 // mod two;
 // mod three;
 // mod four;
 // mod five;
 mod six;
-// mod intcode;
 
 fn main() {
     env_logger::init();

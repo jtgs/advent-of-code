@@ -10,14 +10,14 @@ pub fn part_b() -> i32 {
 
 enum Mode {
     A,
-    B
+    B,
 }
 
 fn solve(start: i32, finish: i32, mode: Mode) -> i32 {
     let mut good_nums = 0;
 
     for xx in start..finish {
-        // This hashmap stores any digits seen in multiples (as the key) with 
+        // This hashmap stores any digits seen in multiples (as the key) with
         // the number of times they're seen (the value).
         let mut digits_seen: HashMap<i32, i32> = HashMap::new();
         let mut increasing = true;
@@ -31,7 +31,7 @@ fn solve(start: i32, finish: i32, mode: Mode) -> i32 {
                 increasing = false;
                 break;
             } else if last_digit == num {
-                // If we're here this is already the second time we've 
+                // If we're here this is already the second time we've
                 // seen this digit, so start the count at 1+1=2
                 let count = digits_seen.entry(num).or_insert(1);
                 *count += 1;
@@ -46,7 +46,7 @@ fn solve(start: i32, finish: i32, mode: Mode) -> i32 {
                     if digits_seen.values().any(|&val| val >= 2) {
                         good_nums += 1;
                     }
-                },
+                }
                 Mode::B => {
                     if digits_seen.values().any(|&val| val == 2) {
                         good_nums += 1;
@@ -62,29 +62,19 @@ fn solve(start: i32, finish: i32, mode: Mode) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn good() {
-        assert_eq!(
-            solve(111111, 111112, Mode::A),
-            1
-        )
+        assert_eq!(solve(111111, 111112, Mode::A), 1)
     }
 
     #[test]
     fn not_increasing() {
-        assert_eq!(
-            solve(223450, 223451, Mode::A),
-            0
-        )
+        assert_eq!(solve(223450, 223451, Mode::A), 0)
     }
 
     #[test]
     fn no_double() {
-        assert_eq!(
-            solve(123789, 123790, Mode::A),
-            0
-        )
+        assert_eq!(solve(123789, 123790, Mode::A), 0)
     }
-
 }

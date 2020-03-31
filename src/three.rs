@@ -1,19 +1,16 @@
-use std::str::FromStr;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::ops::AddAssign;
-use std::collections::HashSet;
+use std::str::FromStr;
 
 #[derive(PartialEq, Debug, Eq, Hash, Clone, Copy)]
 struct Point(i32, i32);
 
 impl AddAssign for Point {
     fn add_assign(&mut self, other: Self) {
-        *self = Self(
-            self.0 + other.0,
-            self.1 + other.1
-        );
+        *self = Self(self.0 + other.0, self.1 + other.1);
     }
 }
 
@@ -28,13 +25,13 @@ enum Direction {
     Up,
     Down,
     Left,
-    Right
+    Right,
 }
 
 #[derive(PartialEq, Eq, Hash, Debug)]
 struct Instruction {
     direction: Direction,
-    distance: i32
+    distance: i32,
 }
 
 impl FromStr for Instruction {
@@ -53,7 +50,10 @@ impl FromStr for Instruction {
 
         let distance = input[1..].parse()?;
 
-        Ok(Self { direction, distance })
+        Ok(Self {
+            direction,
+            distance,
+        })
     }
 }
 
@@ -83,7 +83,7 @@ pub fn part_b() -> i32 {
         .lines()
         .map(Result::unwrap)
         .collect();
-    
+
     solve_b(lines)
 }
 
@@ -101,14 +101,13 @@ fn solve_b(lines: Vec<String>) -> i32 {
         let mut done = false;
 
         for instruction in &line_a {
-
             let step = match instruction.direction {
                 Direction::Right => Point(1, 0),
                 Direction::Left => Point(-1, 0),
                 Direction::Up => Point(0, 1),
-                Direction::Down => Point(0, -1)
+                Direction::Down => Point(0, -1),
             };
-    
+
             for _ in 0..instruction.distance {
                 curr_point += step;
                 steps_a += 1;
@@ -121,22 +120,20 @@ fn solve_b(lines: Vec<String>) -> i32 {
             if done {
                 break;
             }
-    
-        };
+        }
 
         let mut steps_b = 0;
         let mut curr_point = Point(0, 0);
         let mut done = false;
 
         for instruction in &line_b {
-
             let step = match instruction.direction {
                 Direction::Right => Point(1, 0),
                 Direction::Left => Point(-1, 0),
                 Direction::Up => Point(0, 1),
-                Direction::Down => Point(0, -1)
+                Direction::Down => Point(0, -1),
             };
-    
+
             for _ in 0..instruction.distance {
                 curr_point += step;
                 steps_b += 1;
@@ -149,66 +146,71 @@ fn solve_b(lines: Vec<String>) -> i32 {
             if done {
                 break;
             }
-    
-        };
+        }
 
-        steps.push(steps_a + steps_b); 
+        steps.push(steps_a + steps_b);
     }
 
     *steps.iter().min().unwrap()
 }
 
 fn get_instructions(lines: Vec<String>) -> (Vec<Instruction>, Vec<Instruction>) {
-    let line_a: Vec<Instruction> = lines[0].split(',').map(Instruction::from_str).map(Result::unwrap).collect();
+    let line_a: Vec<Instruction> = lines[0]
+        .split(',')
+        .map(Instruction::from_str)
+        .map(Result::unwrap)
+        .collect();
     // println!("{:?}", line_a);
-    let line_b: Vec<Instruction> = lines[1].split(',').map(Instruction::from_str).map(Result::unwrap).collect();
+    let line_b: Vec<Instruction> = lines[1]
+        .split(',')
+        .map(Instruction::from_str)
+        .map(Result::unwrap)
+        .collect();
     // println!("{:?}", line_b);
 
     (line_a, line_b)
 }
 
-fn get_points(line_a: &Vec<Instruction>, line_b: &Vec<Instruction>) -> (HashSet<Point>, HashSet<Point>) {
-
+fn get_points(
+    line_a: &Vec<Instruction>,
+    line_b: &Vec<Instruction>,
+) -> (HashSet<Point>, HashSet<Point>) {
     let mut points_a: HashSet<Point> = HashSet::new();
     let mut points_b: HashSet<Point> = HashSet::new();
 
     let mut curr_point = Point(0, 0);
 
     for instruction in line_a {
-
         let step = match instruction.direction {
             Direction::Right => Point(1, 0),
             Direction::Left => Point(-1, 0),
             Direction::Up => Point(0, 1),
-            Direction::Down => Point(0, -1)
+            Direction::Down => Point(0, -1),
         };
 
         for _ in 0..instruction.distance {
-            curr_point += step; 
+            curr_point += step;
             points_a.insert(curr_point);
         }
-
-    };
+    }
 
     // println!("points_a: {:?}", points_a);
 
     let mut curr_point = Point(0, 0);
 
     for instruction in line_b {
-
         let step = match instruction.direction {
             Direction::Right => Point(1, 0),
             Direction::Left => Point(-1, 0),
             Direction::Up => Point(0, 1),
-            Direction::Down => Point(0, -1)
+            Direction::Down => Point(0, -1),
         };
 
         for _ in 0..instruction.distance {
-            curr_point += step; 
+            curr_point += step;
             points_b.insert(curr_point);
         }
-
-    };
+    }
 
     // println!("points_b: {:?}", points_b);
 
@@ -216,7 +218,10 @@ fn get_points(line_a: &Vec<Instruction>, line_b: &Vec<Instruction>) -> (HashSet<
 }
 
 fn get_intersections(points_a: HashSet<Point>, points_b: HashSet<Point>) -> Vec<Point> {
-    let intersections = points_a.intersection(&points_b).map(Point::clone).collect::<Vec<Point>>();
+    let intersections = points_a
+        .intersection(&points_b)
+        .map(Point::clone)
+        .collect::<Vec<Point>>();
     // println!("intersections: {:?}", intersections);
 
     intersections
@@ -228,34 +233,22 @@ mod tests {
 
     #[test]
     fn points_are_equal() {
-        assert_eq!(
-            Point(3, 2),
-            Point(3, 2)
-        );
+        assert_eq!(Point(3, 2), Point(3, 2));
     }
 
     #[test]
     fn points_are_not_equal() {
-        assert_ne!(
-            Point(3, 2),
-            Point(2, 3)
-        );
+        assert_ne!(Point(3, 2), Point(2, 3));
     }
 
     #[test]
     fn point_distance() {
-        assert_eq!(
-            Point(3, 2).distance(),
-            5
-        )
+        assert_eq!(Point(3, 2).distance(), 5)
     }
 
     #[test]
     fn point_distance_negative() {
-        assert_eq!(
-            Point(3, -2).distance(),
-            5
-        )
+        assert_eq!(Point(3, -2).distance(), 5)
     }
 
     #[test]
@@ -268,16 +261,16 @@ mod tests {
 
     #[test]
     fn simple_example() {
-        assert_eq!(
-            solve_a(vec!["U3,R3".to_string(), "R3,U3".to_string()]),
-            6
-        )
+        assert_eq!(solve_a(vec!["U3,R3".to_string(), "R3,U3".to_string()]), 6)
     }
 
     #[test]
     fn example_one() {
         assert_eq!(
-            solve_a(vec!["R75,D30,R83,U83,L12,D49,R71,U7,L72".to_string(), "U62,R66,U55,R34,D71,R55,D58,R83".to_string()]),
+            solve_a(vec![
+                "R75,D30,R83,U83,L12,D49,R71,U7,L72".to_string(),
+                "U62,R66,U55,R34,D71,R55,D58,R83".to_string()
+            ]),
             159
         );
     }
@@ -285,7 +278,10 @@ mod tests {
     #[test]
     fn example_two() {
         assert_eq!(
-            solve_a(vec!["R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51".to_string(), "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7".to_string()]),
+            solve_a(vec![
+                "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51".to_string(),
+                "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7".to_string()
+            ]),
             135
         );
     }

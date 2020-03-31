@@ -7,7 +7,7 @@ pub fn part_a() -> i32 {
     program.program[2] = 2;
 
     program.run();
-    
+
     program.program[0]
 }
 
@@ -19,13 +19,12 @@ pub fn part_b() -> i32 {
             let mut program = base.clone();
             program.program[1] = noun;
             program.program[2] = verb;
-            
+
             program.run();
 
             if program.program[0] == 19690720 {
                 return 100 * noun + verb;
             }
-
         }
     }
 
@@ -41,6 +40,6 @@ mod tests {
         env_logger::init();
         let mut program = Intcode::from("1,0,0,0,99");
         program.run();
-        assert_eq!(vec![2,0,0,0,99], program.program);
+        assert_eq!(vec![2, 0, 0, 0, 99], program.program);
     }
 }

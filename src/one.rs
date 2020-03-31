@@ -11,7 +11,7 @@ fn full_fuel_for_module(mut mass: isize) -> isize {
 
     loop {
         let extra = fuel_for_module(mass);
-        
+
         if extra < 0 {
             return fuel;
         } else {
@@ -21,22 +21,19 @@ fn full_fuel_for_module(mut mass: isize) -> isize {
     }
 }
 
-pub fn part_a() -> isize{
-     let filename = "input1.txt";
-     let file = File::open(filename).unwrap();
-     let reader = BufReader::new(file);
+pub fn part_a() -> isize {
+    let filename = "input1.txt";
+    let file = File::open(filename).unwrap();
+    let reader = BufReader::new(file);
 
-     let mut total = 0;
+    let mut total = 0;
 
-     for line in reader.lines() {
-        let x = line.unwrap()
-                     .trim()
-                     .parse()
-                     .unwrap();
+    for line in reader.lines() {
+        let x = line.unwrap().trim().parse().unwrap();
         total += fuel_for_module(x);
-     }
+    }
 
-     total
+    total
 }
 
 pub fn part_b() -> isize {
@@ -47,11 +44,8 @@ pub fn part_b() -> isize {
     let mut total = 0;
 
     for line in reader.lines() {
-       let x = line.unwrap()
-                    .trim()
-                    .parse()
-                    .unwrap();
-       total += full_fuel_for_module(x);
+        let x = line.unwrap().trim().parse().unwrap();
+        total += full_fuel_for_module(x);
     }
 
     total
