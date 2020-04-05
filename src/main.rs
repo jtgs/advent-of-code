@@ -2,13 +2,14 @@
 extern crate log;
 extern crate env_logger;
 
-// mod intcode;
+mod intcode;
 // mod one;
 // mod two;
 // mod three;
 // mod four;
 // mod five;
-mod six;
+// mod six;
+mod seven;
 
 fn main() {
     env_logger::init();
@@ -38,8 +39,13 @@ fn main() {
     // println!("Problem 5b: {}", five::part_b());
     // debug!("End problem 5");
 
-    debug!("Start problem 6");
-    println!("Problem 6a: {}", six::part_a());
-    println!("Problem 6b: {}", six::part_b());
-    debug!("End problem 6");
+    // debug!("Start problem 6");
+    // println!("Problem 6a: {}", six::part_a());
+    // println!("Problem 6b: {}", six::part_b());
+    // debug!("End problem 6");
+
+    debug!("Start problem 7");
+    println!("Problem 7a: {}", seven::part_a());
+    println!("Problem 7b: {}", seven::part_b());
+    debug!("End problem 7");
 }
