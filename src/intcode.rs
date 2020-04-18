@@ -19,9 +19,10 @@ enum ParamMode {
 }
 
 #[derive(PartialEq, Debug)]
-enum StepResult {
+pub enum StepResult {
     Halt,
     Continue,
+    Output,
 }
 
 #[derive(Debug)]
@@ -206,6 +207,7 @@ impl Intcode {
                 // Push the first parameter to the output stack.
                 debug!("{} -> output", params[0]);
                 self.output.push(params[0]);
+                result = StepResult::Output;
             }
             Opcode::JumpIfTrue | Opcode::JumpIfFalse => {
                 // If the condition is met by the first param, move the
@@ -275,6 +277,17 @@ impl Intcode {
         while result != StepResult::Halt {
             result = self.step();
         }
+    }
+
+    /// Runs step-by-step until something is pushed to output, or the program halts.
+    pub fn run_until_output(&mut self) -> StepResult {
+        let mut result = StepResult::Continue;
+
+        while result == StepResult::Continue {
+            result = self.step();
+        }
+
+        result
     }
 }
 

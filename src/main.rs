@@ -45,7 +45,7 @@ fn main() {
     // debug!("End problem 6");
 
     debug!("Start problem 7");
-    println!("Problem 7a: {}", seven::part_a());
+    // println!("Problem 7a: {}", seven::part_a());
     println!("Problem 7b: {}", seven::part_b());
     debug!("End problem 7");
 }

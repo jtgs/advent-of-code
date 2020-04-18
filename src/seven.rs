@@ -24,6 +24,26 @@ fn five_amplifiers(settings: Vec<i32>, program: Intcode) -> i32 {
     value
 }
 
+fn loop_thrusters(digits: Vec<i32>, program: Intcode) -> i32 {
+    debug!("{:?}", digits);
+    let mut programs = vec![program.clone(); 5];
+    for i in 0..5 {
+        programs[i].input.push(digits[i]);
+    }
+    let mut input = 0;
+    for j in (0..5).cycle() {
+        programs[j].input.push(input);
+        match programs[j].run_until_output() {
+            StepResult::Output => {
+                input = programs[j].output.pop().unwrap();
+            },
+            StepResult::Halt => return input,
+            StepResult::Continue => unreachable!(),
+        }
+    }
+    unreachable!()
+}
+
 pub fn part_a() -> i32 {
     let options = (0..5).permutations(5);
 
@@ -45,11 +65,11 @@ pub fn part_a() -> i32 {
 }
 
 pub fn part_b() -> i32 {
-    let options = (5..9).permutations(5);
-    let program = Intcode::from_file("input7.txt");
-    let mut top_option = 0;
+    let options = (5..10).permutations(5);
 
-    0
+    options.map(|digits| {
+        loop_thrusters(digits, Intcode::from_file("input7.txt"))
+    }).max().unwrap()
 }
 
 #[cfg(test)]
@@ -85,5 +105,12 @@ mod tests {
         let program = Intcode::from("3,31,3,32,1002,32,10,32,1001,31,-2,31,1007,31,0,33,1002,33,7,33,1,33,31,31,1,32,31,31,4,31,99,0,0,0");
 
         assert_eq!(65210, five_amplifiers(vec![1,0,4,3,2], program));
+    }
+
+    #[test]
+    fn seven_b_example_one() {
+        init();
+        let program = Intcode::from("3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5");
+        assert_eq!(139629729, loop_thrusters(vec![9,8,7,6,5], program));
     }
 }
