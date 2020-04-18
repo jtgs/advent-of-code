@@ -45,6 +45,10 @@ pub fn part_a() -> i32 {
 }
 
 pub fn part_b() -> i32 {
+    let options = (5..9).permutations(5);
+    let program = Intcode::from_file("input7.txt");
+    let mut top_option = 0;
+
     0
 }
 
