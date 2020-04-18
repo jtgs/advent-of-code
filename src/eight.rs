@@ -25,7 +25,7 @@ pub fn part_b() {
         println!("{:?}", row);
     }
 }
-/// Turn a string of pixels into a vector of strings, each the width of the 
+/// Turn a string of pixels into a vector of strings, each the width of the
 /// image, suitable to be printed out one-by-one to form the image.
 fn pixels_to_grid(pixels: &str, width: i32) -> Vec<&str> {
     pixels
@@ -60,10 +60,10 @@ fn count_occurences(block: &str) -> HashMap<char, i32> {
     map
 }
 
-/// Given a vector of image layers, work out the value of each pixel by stacking 
+/// Given a vector of image layers, work out the value of each pixel by stacking
 /// the layers.
-/// 
-/// To do this, all we have to do is, for each pixel, run through the values 
+///
+/// To do this, all we have to do is, for each pixel, run through the values
 /// from each layer and stop when we find one that's not transparent.
 fn stack_pixels(layers: Vec<&str>) -> String {
     let mut result: String = "".to_string();
