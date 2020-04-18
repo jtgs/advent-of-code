@@ -216,19 +216,4 @@ mod tests {
         assert_eq!("D", obj);
         assert_eq!(4, ixa + ixb);
     }
-
-    #[test]
-    fn test_zip() {
-        let vec_one = vec![1, 2, 3];
-        let vec_two = vec![2, 3, 4];
-
-        // Could rewrite find_last_common_point() this way. 
-        // TODO: How to stop the integer being a reference?
-        let result: Vec<&i32> = vec_one.iter().zip(vec_two.iter())
-                                    .filter(|(a, b)| a == b)
-                                    .map(|(a, _)| a)
-                                    .collect();
-
-        assert_eq!(result, vec![&2, &3]);
-    }
 }
