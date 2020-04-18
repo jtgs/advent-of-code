@@ -50,7 +50,6 @@ fn main() {
     // println!("Problem 7b: {}", seven::part_b());
     // debug!("End problem 7");
 
-
     debug!("Start problem 8");
     println!("Problem 8a: {}", eight::part_a());
     println!("Problem 8b: {}", eight::part_b());
