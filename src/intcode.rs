@@ -8,6 +8,7 @@ enum Opcode {
     JumpIfFalse, // 6
     LessThan,    // 7
     Equals,      // 8
+    UpdateBase,  // 9
     Halt,        // 99
 }
 
@@ -15,6 +16,7 @@ enum Opcode {
 enum ParamMode {
     Position,  // 0
     Immediate, // 1
+    Relative,  // 2
     Reference, // TODO: understand how this is position
 }
 
@@ -46,6 +48,7 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
         6 => Opcode::JumpIfFalse,
         7 => Opcode::LessThan,
         8 => Opcode::Equals,
+        9 => Opcode::UpdateBase,
         99 => Opcode::Halt,
         _ => panic!("Unsupported opcode {}!", input),
     };
@@ -73,8 +76,8 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
             // The single param here is the destination of the input.
             vec![ParamMode::Reference]
         }
-        Opcode::PushOutput => {
-            // This has a single parameter which could be immediate or position.
+        Opcode::PushOutput | Opcode::UpdateBase => {
+            // These have a single parameter which could be immediate or position.
             vec![param1]
         }
         Opcode::JumpIfTrue | Opcode::JumpIfFalse => {
@@ -146,6 +149,7 @@ pub struct Intcode {
     pub input: Vec<i32>,
     pub output: Vec<i32>,
     pc: i32,
+    relative_base: i32,
 }
 
 impl Intcode {
@@ -159,6 +163,7 @@ impl Intcode {
             input: Vec::new(),
             output: Vec::new(),
             pc: 0,
+            relative_base: 0,
         }
     }
 
@@ -252,6 +257,10 @@ impl Intcode {
                     debug!("Store 0 in slot {}", params[2]);
                     program[params[2] as usize] = 0;
                 }
+            }
+            Opcode::UpdateBase => {
+                debug!("updatebase: {}", params[0]);
+                self.relative_base = params[0];
             }
             Opcode::Halt => {
                 debug!("Halt!");
