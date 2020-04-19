@@ -33,4 +33,12 @@ mod tests {
         let output = program.output[0].to_string();
         assert_eq!(16, output.chars().count());
     }
+
+    #[test]
+    fn nine_example_three() {
+        init();
+        let mut program = Intcode::from("104,1125899906842624,99");
+        program.run();
+        assert_eq!(1125899906842624, program.output[0]);
+    }
 }
