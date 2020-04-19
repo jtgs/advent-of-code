@@ -5,6 +5,11 @@ const BLACK: char = '0';
 const WHITE: char = '1';
 const TRANSPARENT: char = '2';
 
+/// Solve Part A.
+///
+/// Here, we want to find out which layer has the most '0's in it; once we've
+/// got that we return the number of '1's multiplied by the number of '2's in
+/// that layer.
 pub fn part_a() -> i32 {
     let input = std::fs::read_to_string("input8.txt").expect("Unable to read file");
     let layers = split_into_layers(&input, 6, 25);
@@ -15,6 +20,10 @@ pub fn part_a() -> i32 {
     counts[0][&WHITE] * counts[0][&TRANSPARENT]
 }
 
+/// Solve Part B.
+///
+/// This time, we need to stack the layers to produce a readable image.
+/// We then print out that image so the user can read what it says.
 pub fn part_b() {
     let input = std::fs::read_to_string("input8.txt").expect("Unable to read file");
     let layers = split_into_layers(&input, 6, 25);
@@ -25,15 +34,16 @@ pub fn part_b() {
         println!("{:?}", row);
     }
 }
+
 /// Turn a string of pixels into a vector of strings, each the width of the
 /// image, suitable to be printed out one-by-one to form the image.
 fn pixels_to_grid(pixels: &str, width: i32) -> Vec<&str> {
     pixels
-        .as_bytes()
-        .chunks(width as usize)
-        .map(str::from_utf8)
-        .collect::<Result<Vec<&str>, _>>()
-        .unwrap()
+        .as_bytes() // safe because we only have digits
+        .chunks(width as usize) // iterator of vectors of bytes (u8)
+        .map(str::from_utf8) // now iterator of Result(&str, Err)
+        .collect::<Result<Vec<&str>, _>>() // collect into a vector
+        .unwrap() // -> vector of strings - huzzah!
 }
 
 /// Split an input string into a vector of layers of the specified size.
@@ -41,11 +51,11 @@ fn split_into_layers(input: &str, height: i32, width: i32) -> Vec<&str> {
     let block_size = (height * width) as usize;
 
     input
-        .as_bytes()
-        .chunks(block_size)
-        .map(str::from_utf8)
-        .collect::<Result<Vec<&str>, _>>()
-        .unwrap()
+        .as_bytes() // safe because we only have digits
+        .chunks(block_size) // iterator of vectors of bytes (u8)
+        .map(str::from_utf8) // now iterator of Result<&str, Err>
+        .collect::<Result<Vec<&str>, _>>() // collect into a vector
+        .unwrap() // -> vector of strings - huzzah!
 }
 
 /// For a block of input, count the occurrences of each character within and
