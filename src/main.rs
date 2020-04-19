@@ -46,10 +46,10 @@ fn main() {
     // println!("Problem 6b: {}", six::part_b());
     // debug!("End problem 6");
 
-    debug!("Start problem 7");
-    println!("Problem 7a: {}", seven::part_a());
-    println!("Problem 7b: {}", seven::part_b());
-    debug!("End problem 7");
+    // debug!("Start problem 7");
+    // println!("Problem 7a: {}", seven::part_a());
+    // println!("Problem 7b: {}", seven::part_b());
+    // debug!("End problem 7");
 
     // debug!("Start problem 8");
     // println!("Problem 8a: {}", eight::part_a());

@@ -1,11 +1,21 @@
 use crate::intcode::*;
 
 pub fn part_a() -> i64 {
-    unimplemented!()
+    let mut program = Intcode::from_file("input9.txt");
+    program.input.push(1);
+    program.run();
+    debug!("output: {:?}", program.output);
+
+    program.output[0]
 }
 
 pub fn part_b() -> i64 {
-    unimplemented!()
+    let mut program = Intcode::from_file("input9.txt");
+    program.input.push(2);
+    program.run();
+    debug!("output: {:?}", program.output);
+
+    program.output[0]
 }
 
 #[cfg(test)]
@@ -40,5 +50,14 @@ mod tests {
         let mut program = Intcode::from("104,1125899906842624,99");
         program.run();
         assert_eq!(1125899906842624, program.output[0]);
+    }
+
+    #[test]
+    fn example_203() {
+        init();
+        let mut program = Intcode::from("203,1,99");
+        program.input.push(5);
+        program.run();
+        assert_eq!(5, program.program[1]);
     }
 }

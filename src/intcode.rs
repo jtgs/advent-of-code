@@ -17,6 +17,7 @@ enum ParamMode {
     Position,  // 0
     Immediate, // 1
     Relative,  // 2
+    RelativeReference, 
     Reference, // TODO: understand how this is position
 }
 
@@ -54,8 +55,6 @@ fn parse_opcode(input: i64) -> (Opcode, Vec<ParamMode>) {
     };
     debug!("opcode: {:?}", opcode);
 
-    // Assume for now we're only going to get two parameters that might be
-    // immediate. (See the match below for why.)
     let param1 = match (input / 100) % 10 {
         1 => ParamMode::Immediate,
         0 => ParamMode::Position,
@@ -68,17 +67,33 @@ fn parse_opcode(input: i64) -> (Opcode, Vec<ParamMode>) {
         2 => ParamMode::Relative,
         _ => unreachable!()
     };
-    debug!("param1: {:?}, param2: {:?}", param1, param2);
+    let param3 = match (input / 10000) % 10 {
+        1 => ParamMode::Immediate,
+        0 => ParamMode::Position,
+        2 => ParamMode::Relative,
+        _ => unreachable!()
+    };
+    debug!("param1: {:?}, param2: {:?}, param3: {:?}", param1, param2, param3);
 
     let param_modes = match opcode {
         Opcode::Add | Opcode::Multiply | Opcode::LessThan | Opcode::Equals => {
             // Params 1 and 2 can be Position or Immediate.
-            // Param 3 provides the reference to write to.
-            vec![param1, param2, ParamMode::Reference]
+            // Param 3 provides the reference to write to, which could be relative!
+            let mut modes = vec![param1, param2];
+            match param3 {
+                ParamMode::Relative => modes.push(ParamMode::RelativeReference),
+                ParamMode::Position => modes.push(ParamMode::Reference),
+                _ => unreachable!()
+            }
+            modes
         }
         Opcode::StoreInput => {
             // The single param here is the destination of the input.
-            vec![ParamMode::Reference]
+            match param1 {
+                ParamMode::Relative => vec![ParamMode::RelativeReference],
+                ParamMode::Position => vec![ParamMode::Reference],
+                _ => unreachable!()
+            }
         }
         Opcode::PushOutput | Opcode::UpdateBase => {
             // These have a single parameter which could be immediate or position.
@@ -140,8 +155,12 @@ impl Operation {
                 ParamMode::Relative => {
                     // This is the number at the position indicated by 
                     // the current relative base, plus this parameter. 
-                    let index = program.mem_get(pc + ii as i64 + 1) + base;
-                    params.push(program.mem_get(index));
+                    let param = program.mem_get(pc + ii as i64 + 1);
+                    debug!("relative: {} + {}", param, base);
+                    params.push(program.mem_get(param + base));
+                }
+                ParamMode::RelativeReference => {
+                    params.push(program.mem_get(pc + ii as i64 + 1) + base);
                 }
             }
         }
@@ -285,6 +304,7 @@ impl Intcode {
             Opcode::UpdateBase => {
                 debug!("updatebase: {}", params[0]);
                 self.relative_base += params[0];
+                debug!("  base is now {}", self.relative_base);
             }
             Opcode::Halt => {
                 debug!("Halt!");
