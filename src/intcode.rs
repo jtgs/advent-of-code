@@ -56,13 +56,17 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
 
     // Assume for now we're only going to get two parameters that might be
     // immediate. (See the match below for why.)
-    let param1 = match (input / 100) % 10 == 1 {
-        true => ParamMode::Immediate,
-        false => ParamMode::Position,
+    let param1 = match (input / 100) % 10 {
+        1 => ParamMode::Immediate,
+        0 => ParamMode::Position,
+        2 => ParamMode::Relative,
+        _ => unreachable!()
     };
-    let param2 = match (input / 1000) % 10 == 1 {
-        true => ParamMode::Immediate,
-        false => ParamMode::Position,
+    let param2 = match (input / 1000) % 10 {
+        1 => ParamMode::Immediate,
+        0 => ParamMode::Position,
+        2 => ParamMode::Relative,
+        _ => unreachable!()
     };
     debug!("param1: {:?}, param2: {:?}", param1, param2);
 
@@ -97,15 +101,15 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
 impl Operation {
     /// Builds a new Operation from the provided program, starting at the point
     /// indicated by the program counter (pc).
-    pub fn from(program: &Vec<i32>, pc: i32) -> Self {
+    pub fn from(program: &Intcode, pc: i32) -> Self {
         debug!("New Operation from position {}", pc);
-        let (opcode, param_modes) = parse_opcode(program[pc as usize]);
+        let (opcode, param_modes) = parse_opcode(program.mem_get(pc));
 
         // Work out how many parameters we need.
         let num_params = match opcode {
             Opcode::Add | Opcode::Multiply | Opcode::LessThan | Opcode::Equals => 3,
             Opcode::JumpIfTrue | Opcode::JumpIfFalse => 2,
-            Opcode::StoreInput | Opcode::PushOutput => 1,
+            Opcode::StoreInput | Opcode::PushOutput | Opcode::UpdateBase => 1,
             Opcode::Halt => 0,
         };
         debug!("  no. params: {}", num_params);
@@ -119,19 +123,25 @@ impl Operation {
 
     /// Given a whole program, and the position of this Operation within it,
     /// works out what the parameters are for this Operation.
-    pub fn get_params(&self, program: &Vec<i32>, pc: i32) -> Vec<i32> {
+    pub fn get_params(&self, program: &Intcode, pc: i32, base: i32) -> Vec<i32> {
         let mut params: Vec<i32> = Vec::new();
 
         for ii in 0..self.num_params as usize {
             match self.param_modes[ii] {
                 ParamMode::Position => {
                     // This is the number at the position indicated.
-                    let index = program[pc as usize + ii + 1] as usize;
-                    params.push(program[index]);
+                    let index = program.mem_get(pc + ii as i32 + 1);
+                    params.push(program.mem_get(index));
                 }
                 ParamMode::Immediate | ParamMode::Reference => {
                     // This is just the literal number in the parameter.
-                    params.push(program[pc as usize + ii + 1]);
+                    params.push(program.mem_get(pc + ii as i32 + 1));
+                }
+                ParamMode::Relative => {
+                    // This is the number at the position indicated by 
+                    // the current relative base, plus this parameter. 
+                    let index = program.mem_get(pc + ii as i32 + 1) + base;
+                    params.push(program.mem_get(index));
                 }
             }
         }
@@ -173,18 +183,32 @@ impl Intcode {
         Self::from(&data)
     }
 
+    /// Safely retrieves the data at a given memory address.
+    pub fn mem_get(&self, address: i32) -> i32 {
+        *self.program.get(address as usize).unwrap_or(&0)
+    }
+
+    // Stores a value at a memory location, enlarging the memory if needed.
+    fn mem_set(&mut self, address: i32, value: i32) {
+        let address = address as usize;
+        if address >= self.program.len() {
+            self.program.resize(address + 1, 0);
+        }
+        self.program[address] = value.into();
+    }
+
     /// Perform a single operation, starting at the program counter (pc).
     ///
     /// Returns a StepResult (Halt or Continue).
     fn step(&mut self) -> StepResult {
-        let program = &mut self.program;
+        // let program = &mut self.program;
 
         // Calculate what the next operation is.
-        let op = Operation::from(program, self.pc);
+        let op = Operation::from(&self, self.pc);
 
         // Get the parameters. This deals with parameter modes so that the
         // value in this vector is the one we need below.
-        let params = op.get_params(program, self.pc);
+        let params = op.get_params(&self, self.pc, self.relative_base);
 
         let mut result = StepResult::Continue;
         let mut pc_moved = false;
@@ -194,19 +218,19 @@ impl Intcode {
             Opcode::Add => {
                 // Add the first to the second, store in the third.
                 debug!("{} + {} -> [{}]", params[0], params[1], params[2]);
-                program[params[2] as usize] = params[0] + params[1];
+                self.mem_set(params[2], params[0] + params[1]);
             }
             Opcode::Multiply => {
                 // Multiply the first and the second, store in the third.
                 debug!("{} * {} -> [{}]", params[0], params[1], params[2]);
-                program[params[2] as usize] = params[0] * params[1];
+                self.mem_set(params[2], params[0] * params[1]);
             }
             Opcode::StoreInput => {
                 // Get the first value off the input stack; store it in the
                 // cell indicated by the first parameter.
                 let input = self.input.remove(0);
                 debug!("{} -> [{}]", input, params[0]);
-                program[params[0] as usize] = input;
+                self.mem_set(params[0], input);
             }
             Opcode::PushOutput => {
                 // Push the first parameter to the output stack.
@@ -252,10 +276,10 @@ impl Intcode {
 
                 if condition {
                     debug!("Store 1 in slot {}", params[2]);
-                    program[params[2] as usize] = 1;
+                    self.mem_set(params[2], 1);
                 } else {
                     debug!("Store 0 in slot {}", params[2]);
-                    program[params[2] as usize] = 0;
+                    self.mem_set(params[2], 0);
                 }
             }
             Opcode::UpdateBase => {

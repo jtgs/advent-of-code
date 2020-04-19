@@ -35,9 +35,13 @@ pub fn part_b() -> i32 {
 mod tests {
     use super::*;
 
+    fn init() {
+        let _ = env_logger::builder().is_test(true).try_init();
+    }
+
     #[test]
     fn two_example_one() {
-        env_logger::init();
+        init();
         let mut program = Intcode::from("1,0,0,0,99");
         program.run();
         assert_eq!(vec![2, 0, 0, 0, 99], program.program);
