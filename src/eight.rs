@@ -4,6 +4,8 @@ use std::str;
 const BLACK: char = '0';
 const WHITE: char = '1';
 const TRANSPARENT: char = '2';
+const WIDTH: i32 = 25;
+const HEIGHT: i32 = 6;
 
 /// Solve Part A.
 ///
@@ -12,7 +14,7 @@ const TRANSPARENT: char = '2';
 /// that layer.
 pub fn part_a() -> i32 {
     let input = std::fs::read_to_string("input8.txt").expect("Unable to read file");
-    let layers = split_into_layers(&input, 6, 25);
+    let layers = split_into_layers(&input, HEIGHT, WIDTH);
     let mut counts: Vec<HashMap<char, i32>> = layers.iter().map(|l| count_occurences(l)).collect();
 
     counts.sort_by(|a, b| a[&BLACK].cmp(&b[&BLACK]));
@@ -26,7 +28,7 @@ pub fn part_a() -> i32 {
 /// We then print out that image so the user can read what it says.
 pub fn part_b() {
     let input = std::fs::read_to_string("input8.txt").expect("Unable to read file");
-    let layers = split_into_layers(&input, 6, 25);
+    let layers = split_into_layers(&input, HEIGHT, WIDTH);
     debug!("layers: {}", layers.len());
     let pixels = stack_pixels(layers);
 
