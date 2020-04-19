@@ -1,6 +1,6 @@
 use crate::intcode::*;
 
-pub fn part_a() -> i32 {
+pub fn part_a() -> i64 {
     let mut program = Intcode::from_file("input2.txt");
 
     program.program[1] = 12;
@@ -11,7 +11,7 @@ pub fn part_a() -> i32 {
     program.program[0]
 }
 
-pub fn part_b() -> i32 {
+pub fn part_b() -> i64 {
     let base = Intcode::from_file("input2.txt");
 
     for noun in 0..100 {

@@ -1,10 +1,10 @@
 use crate::intcode::*;
 
-pub fn part_a() -> i32 {
+pub fn part_a() -> i64 {
     unimplemented!()
 }
 
-pub fn part_b() -> i32 {
+pub fn part_b() -> i64 {
     unimplemented!()
 }
 
@@ -21,7 +21,16 @@ mod tests {
         init();
         let mut program = Intcode::from("109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99");
         let output = vec![109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99];
-         program.run();
+        program.run();
         assert_eq!(output, program.output);
+    }
+
+    #[test]
+    fn nine_example_two() {
+        init();
+        let mut program = Intcode::from("1102,34915192,34915192,7,4,7,99,0");
+        program.run();
+        let output = program.output[0].to_string();
+        assert_eq!(16, output.chars().count());
     }
 }

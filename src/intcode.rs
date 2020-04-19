@@ -30,13 +30,13 @@ pub enum StepResult {
 #[derive(Debug)]
 struct Operation {
     pub opcode: Opcode,
-    pub num_params: i32,
+    pub num_params: i64,
     pub param_modes: Vec<ParamMode>,
 }
 
 /// Parses an integer representing an opcode into an Opcode and vector of
 /// ParamModes.
-fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
+fn parse_opcode(input: i64) -> (Opcode, Vec<ParamMode>) {
     debug!("input: {}", input);
 
     let opcode = match input % 100 {
@@ -101,7 +101,7 @@ fn parse_opcode(input: i32) -> (Opcode, Vec<ParamMode>) {
 impl Operation {
     /// Builds a new Operation from the provided program, starting at the point
     /// indicated by the program counter (pc).
-    pub fn from(program: &Intcode, pc: i32) -> Self {
+    pub fn from(program: &Intcode, pc: i64) -> Self {
         debug!("New Operation from position {}", pc);
         let (opcode, param_modes) = parse_opcode(program.mem_get(pc));
 
@@ -123,24 +123,24 @@ impl Operation {
 
     /// Given a whole program, and the position of this Operation within it,
     /// works out what the parameters are for this Operation.
-    pub fn get_params(&self, program: &Intcode, pc: i32, base: i32) -> Vec<i32> {
-        let mut params: Vec<i32> = Vec::new();
+    pub fn get_params(&self, program: &Intcode, pc: i64, base: i64) -> Vec<i64> {
+        let mut params: Vec<i64> = Vec::new();
 
         for ii in 0..self.num_params as usize {
             match self.param_modes[ii] {
                 ParamMode::Position => {
                     // This is the number at the position indicated.
-                    let index = program.mem_get(pc + ii as i32 + 1);
+                    let index = program.mem_get(pc + ii as i64 + 1);
                     params.push(program.mem_get(index));
                 }
                 ParamMode::Immediate | ParamMode::Reference => {
                     // This is just the literal number in the parameter.
-                    params.push(program.mem_get(pc + ii as i32 + 1));
+                    params.push(program.mem_get(pc + ii as i64 + 1));
                 }
                 ParamMode::Relative => {
                     // This is the number at the position indicated by 
                     // the current relative base, plus this parameter. 
-                    let index = program.mem_get(pc + ii as i32 + 1) + base;
+                    let index = program.mem_get(pc + ii as i64 + 1) + base;
                     params.push(program.mem_get(index));
                 }
             }
@@ -155,11 +155,11 @@ impl Operation {
 // Struct to store an intcode program.
 #[derive(Debug, Clone)]
 pub struct Intcode {
-    pub program: Vec<i32>,
-    pub input: Vec<i32>,
-    pub output: Vec<i32>,
-    pc: i32,
-    relative_base: i32,
+    pub program: Vec<i64>,
+    pub input: Vec<i64>,
+    pub output: Vec<i64>,
+    pc: i64,
+    relative_base: i64,
 }
 
 impl Intcode {
@@ -184,12 +184,12 @@ impl Intcode {
     }
 
     /// Safely retrieves the data at a given memory address.
-    pub fn mem_get(&self, address: i32) -> i32 {
+    pub fn mem_get(&self, address: i64) -> i64 {
         *self.program.get(address as usize).unwrap_or(&0)
     }
 
     // Stores a value at a memory location, enlarging the memory if needed.
-    fn mem_set(&mut self, address: i32, value: i32) {
+    fn mem_set(&mut self, address: i64, value: i64) {
         let address = address as usize;
         if address >= self.program.len() {
             self.program.resize(address + 1, 0);

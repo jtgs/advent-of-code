@@ -1,7 +1,7 @@
 use crate::intcode::*;
 use itertools::Itertools;
 
-fn amplifier(setting: i32, input: i32, mut program: Intcode) -> i32 {
+fn amplifier(setting: i64, input: i64, mut program: Intcode) -> i64 {
     // Set up the input.
     program.input.push(setting);
     program.input.push(input);
@@ -13,7 +13,7 @@ fn amplifier(setting: i32, input: i32, mut program: Intcode) -> i32 {
     program.output[0]
 }
 
-fn five_amplifiers(settings: Vec<i32>, program: Intcode) -> i32 {
+fn five_amplifiers(settings: Vec<i64>, program: Intcode) -> i64 {
     let mut value = 0;
 
     for ii in settings {
@@ -24,7 +24,7 @@ fn five_amplifiers(settings: Vec<i32>, program: Intcode) -> i32 {
     value
 }
 
-fn loop_thrusters(digits: Vec<i32>, program: Intcode) -> i32 {
+fn loop_thrusters(digits: Vec<i64>, program: Intcode) -> i64 {
     debug!("{:?}", digits);
     let mut programs = vec![program.clone(); 5];
     for i in 0..5 {
@@ -44,7 +44,7 @@ fn loop_thrusters(digits: Vec<i32>, program: Intcode) -> i32 {
     unreachable!()
 }
 
-pub fn part_a() -> i32 {
+pub fn part_a() -> i64 {
     let options = (0..5).permutations(5);
 
     let program = Intcode::from_file("input7.txt");
@@ -64,7 +64,7 @@ pub fn part_a() -> i32 {
     top_option
 }
 
-pub fn part_b() -> i32 {
+pub fn part_b() -> i64 {
     let options = (5..10).permutations(5);
 
     options

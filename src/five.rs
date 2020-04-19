@@ -1,6 +1,6 @@
 use crate::intcode::*;
 
-pub fn part_a() -> i32 {
+pub fn part_a() -> i64 {
     let mut program = Intcode::from_file("input5.txt");
 
     // Input is '1'
@@ -13,7 +13,7 @@ pub fn part_a() -> i32 {
     *program.output.last().unwrap()
 }
 
-pub fn part_b() -> i32 {
+pub fn part_b() -> i64 {
     let mut program = Intcode::from_file("input5.txt");
 
     // Input is '5'
