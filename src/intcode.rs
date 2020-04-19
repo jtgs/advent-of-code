@@ -284,7 +284,7 @@ impl Intcode {
             }
             Opcode::UpdateBase => {
                 debug!("updatebase: {}", params[0]);
-                self.relative_base = params[0];
+                self.relative_base += params[0];
             }
             Opcode::Halt => {
                 debug!("Halt!");
